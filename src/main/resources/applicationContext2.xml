@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-4.2.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-4.2.xsd">
+
+  <!--1 引入属性文件，在配置中占位使用 -->
+  <context:property-placeholder location="classpath*:database.properties" />
+
+  <!--2 配置C3P0数据源 -->
+  <bean id="datasource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+    <!-- 指定JBDC 驱动类-->
+    <property name="driverClass" value="${driver}" />
+    <!-- 连接数据库的路径地址-->
+    <!--?useUnicode=true&amp;characterEncoding=UTF-8&amp;useJDBCCompliantTimezoneShift=true&amp;useLegacyDatetimeCode=false&amp;serverTimezone=UTC-->
+    <property name="jdbcUrl" value="${url}" />
+    <!-- 用户名-->
+    <property name="user" value="${user}"/>
+    <!--密码-->
+    <property name="password" value="${password}"/>
+    <!-- 当连接池中的连接耗尽的时候c3p0一次同时获取的连接数  -->
+    <property name="acquireIncrement" value="5"></property>
+    <!-- 初始连接池大小 -->
+    <property name="initialPoolSize" value="10"></property>
+    <!-- 连接池中连接最小个数 -->
+    <property name="minPoolSize" value="5"></property>
+    <!-- 连接池中连接最大个数 -->
+    <property name="maxPoolSize" value="20"></property>
+  </bean>
+
+  <!--3 会话工厂bean sqlSessionFactoryBean -->
+  <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <!-- 数据源 -->
+    <property name="dataSource" ref="datasource"></property>
+    <!-- 别名 -->
+    <property name="typeAliasesPackage" value="com.xinshi.smbms.pojo"></property>
+<!--    <property name="configLocation" value="classpath:mybatis-config.xml"></property>-->
+    <!-- sql映射文件路径 -->
+    <property name="mapperLocations" value="classpath*:xml/*.xml"></property>
+  </bean>
+
+  <!--4 自动扫描对象关系映射 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--指定会话工厂，如果当前上下文中只定义了一个则该属性可省去 -->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+        <!-- 指定要自动扫描接口的基础包，实现接口 -->
+        <property name="basePackage" value="com.xinshi.smbms.mapper"></property>
+    </bean>
+
+  <!--5 声明式事务管理 -->
+  <!--定义事物管理器，由spring管理事务 -->
+  <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="datasource"></property>
+  </bean>
+
+
+<!--  &lt;!&ndash;支持注解驱动的事务管理，指定事务管理器 &ndash;&gt;
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+  &lt;!&ndash; 通过  <tx:advice>  标签为指定 的事务管理器设置事务属性  &ndash;&gt;
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+          <tx:method name="find*" propagation="SUPPORTS"/>
+          <tx:method name="update*" propagation="REQUIRED"/>
+          <tx:method name="insert*" propagation="SUPPORTS"/>
+          <tx:method name="delete*" propagation="SUPPORTS"/>
+          <tx:method name="add*" propagation="SUPPORTS"/>
+          <tx:method name="*" propagation="SUPPORTS"/>
+        </tx:attributes>
+    </tx:advice>
+  <aop:config>
+    &lt;!&ndash;  定义切入点  &ndash;&gt;
+    <aop:pointcut id="serviceMethod" expression="execution(* com.xinshi.smbms.service..*.*(..))"/>
+    &lt;!&ndash;  将事务增强与切入点组合  &ndash;&gt;
+    <aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod"/>
+  </aop:config>-->
+
+
+
+  <!--6 容器自动扫描IOC组件  -->
+  <context:component-scan base-package="com.xinshi.smbms"/>
+
+  <import resource="springmvc-servlet.xml"/>
+
+  <!--7 aspectj支持自动代理实现AOP功能 -->
+  <aop:aspectj-autoproxy proxy-target-class="true"></aop:aspectj-autoproxy>
+
+
+</beans>
