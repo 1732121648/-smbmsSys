@@ -30,7 +30,7 @@
     <where>
       p.id = b.providerId
       <if test=" bill != null  and bill.productName !=null and bill.productName !='' ">
-        and  productName like CONCAT('%',#{bill.productName},'%')
+          and  productName like CONCAT('%',#{bill.productName},'%')
       </if>
       <if test=" bill != null and  bill.isPayment > 0  ">
         and  isPayment = #{bill.isPayment}

@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xinshi.smbms.mapper.UserMapper">
+  <resultMap id="BaseResultMap" type="com.xinshi.smbms.pojo.User">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="usercode" jdbcType="VARCHAR" property="usercode" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="userpassword" jdbcType="VARCHAR" property="userpassword" />
+    <result column="gender" jdbcType="INTEGER" property="gender" />
+    <result column="birthday"  property="birthday" />
+    <result column="age" property="age" />
+    <result column="phone" jdbcType="VARCHAR" property="phone" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="userrole" jdbcType="BIGINT" property="userrole" />
+    <result column="createdBy" jdbcType="BIGINT" property="createdby" />
+    <result column="creationDate" jdbcType="TIMESTAMP" property="creationdate" />
+    <result column="modifyBy" jdbcType="BIGINT" property="modifyby" />
+    <result column="modifyDate" jdbcType="TIMESTAMP" property="modifydate" />
+    <result column="idPicPath" jdbcType="VARCHAR" property="idPicPath" />
+    <result column="workPicPath" jdbcType="VARCHAR" property="workPicPath" />
+    <association property="role" javaType="com.xinshi.smbms.pojo.Role">
+      <result property="id" column="id"></result>
+      <result property="roleCode" column="roleCode"></result>
+      <result property="roleName" column="roleName"></result>
+    </association>
+  </resultMap>
+
+  <resultMap id="roleMap" type="com.xinshi.smbms.pojo.Role">
+    <result property="id" column="id"></result>
+    <result property="roleCode" column="roleCode"></result>
+    <result property="roleName" column="roleName"></result>
+  </resultMap>
+
+  <select id="findAllRoleName" resultMap="roleMap">
+        select  *  from   smbms_role
+    </select>
+
+  <!-- 通用 sql 名-->
+  <sql id="Base_Column_List">
+    id, usercode, username, userpassword, gender,DATE_FORMAT(birthday, '%Y-%m-%d %H:%i:%S') as birthday , phone, address, userrole,
+    createdBy, creationDate, modifyBy, modifyDate
+  </sql>
+  <!--  实现用户分页  -->
+  <select id="findPageUser" resultMap="BaseResultMap">
+    select  u.*,ROUND(DATEDIFF(CURDATE(), birthday)/365.2422) as age,r.roleName from  smbms_user  u , smbms_role  r
+    <where>
+      u.userRole=r.id
+      <if test="user != null and user.username !=null and user.username !=''">
+            and  username like CONCAT('%',#{user.username},'%')
+      </if>
+      <if test="user != null and user.userrole !=null  and user.userrole !=''">
+         and  userrole like CONCAT('%',#{user.userrole},'%')
+      </if>
+    </where>
+    order  by creationDate  desc
+    LIMIT  #{pageNo},#{pageSize}
+  </select>
+  <!--  统计用户总行数  -->
+  <select id="countRowUser" resultType="_int">
+    select  count(1)  from smbms_user
+    <where>
+        <if test="username !=null and username !=''">
+            and  username like CONCAT('%',#{username},'%')
+        </if>
+      <if test="userrole !=null  and userrole !=''">
+        and  userrole like CONCAT('%',#{userrole},'%')
+      </if>
+
+    </where>
+  </select>
+  <!--  根据用户ID 查询用户 -->
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    <include refid="selectByID"/>
+    <where>
+      u.userRole=r.id
+      <if test=" id > 0">
+        and  u.id = #{id,jdbcType=BIGINT}
+      </if>
+    </where>
+  </select>
+
+  <sql id="selectByID" >
+      select  u.*,r.roleName,r.id,r.roleCode
+      from  smbms_user  u , smbms_role  r
+    </sql>
+  <!-- 查询角色ID -->
+  <select id="selectByUserRole" resultMap="BaseResultMap">
+    <include refid="selectByID"/>
+    <where>
+      u.userRole=r.id
+      <if test="userrole > 0">
+        and  u.userrole = #{userrole}
+      </if>
+    </where>
+    GROUP BY u.userRole
+  </select>
+
+  <!--  用户登录 sql语句   -->
+  <select id="findUserCodeOrPwd" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+     from smbms_user
+     <where>
+       <if test="usercode!=null and usercode!=''">
+         and   usercode = #{usercode}
+       </if>
+       <if test=" userpassword!=null and userpassword!=''">
+         and  userpassword = #{userpassword}
+       </if>
+     </where>
+  </select>
+    <!-- 根据用户 ID 删除  -->
+  <delete id="deleteByIDUser">
+    delete from smbms_user
+    <where>
+        <if test="id > 0 ">
+            id = #{id,jdbcType=BIGINT}
+        </if>
+    </where>
+  </delete>
+  <!--  新增用户 -->
+  <insert id="addUser" parameterType="com.xinshi.smbms.pojo.User">
+    insert into smbms_user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="usercode != null">
+        usercode,
+      </if>
+      <if test="username != null">
+        username,
+      </if>
+      <if test="userpassword != null">
+        userpassword,
+      </if>
+      <if test="gender != null">
+        gender,
+      </if>
+      <if test="birthday != null">
+        birthday,
+      </if>
+      <if test="phone != null">
+        phone,
+      </if>
+      <if test="address != null">
+        address,
+      </if>
+      <if test="userrole != null">
+        userrole,
+      </if>
+      <if test="createdby != null">
+        createdBy,
+      </if>
+      <if test="creationdate != null">
+        creationDate,
+      </if>
+      <if test="modifyby != null">
+        modifyBy,
+      </if>
+      <if test="modifydate != null">
+        modifyDate,
+      </if>
+      <if test="idPicPath != null">
+        idPicPath,
+      </if>
+      <if test="workPicPath != null">
+        workPicPath,
+      </if>
+
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="usercode != null">
+        #{usercode,jdbcType=VARCHAR},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="userpassword != null">
+        #{userpassword,jdbcType=VARCHAR},
+      </if>
+      <if test="gender != null">
+        #{gender,jdbcType=INTEGER},
+      </if>
+      <if test="birthday != null">
+        #{birthday,jdbcType=DATE},
+      </if>
+      <if test="phone != null">
+        #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null">
+        #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="userrole != null">
+        #{userrole,jdbcType=BIGINT},
+      </if>
+      <if test="createdby != null">
+        #{createdby,jdbcType=BIGINT},
+      </if>
+      <if test="creationdate != null">
+        #{creationdate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyby != null">
+        #{modifyby,jdbcType=BIGINT},
+      </if>
+      <if test="modifydate != null">
+        #{modifydate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="idPicPath != null">
+        #{idPicPath},
+      </if>
+      <if test="workPicPath != null">
+        #{modifydate},
+      </if>
+    </trim>
+  </insert>
+    <!-- 修改用户信息-->
+  <update id="updateOrAddUser" parameterType="com.xinshi.smbms.pojo.User">
+    update smbms_user
+    <trim prefix="set" suffixOverrides="," suffix=" where id = #{id,jdbcType=BIGINT}  ">
+      <if test="usercode != null">
+        usercode = #{usercode,jdbcType=VARCHAR},
+      </if>
+      <if test="username != null">
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="userpassword != null">
+        userpassword = #{userpassword,jdbcType=VARCHAR},
+      </if>
+      <if test="gender != null">
+        gender = #{gender,jdbcType=INTEGER},
+      </if>
+      <if test="birthday != null">
+        birthday = #{birthday,jdbcType=DATE},
+      </if>
+      <if test="phone != null">
+        phone = #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null">
+        address = #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="userrole !=  null">
+        userrole = #{userrole,jdbcType=BIGINT},
+      </if>
+      <if test="createdby != null">
+        createdBy = #{createdby,jdbcType=BIGINT},
+      </if>
+      <if test="creationdate != null">
+        creationDate = #{creationdate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyby != null">
+        modifyBy = #{modifyby,jdbcType=BIGINT},
+      </if>
+      <if test="modifydate != null">
+        modifyDate = #{modifydate,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </update>
+  <!-- 根据用户ID 查询密码是否存在 -->
+  <select id="findByPassWord"  resultMap="BaseResultMap">
+    select  userpassword from smbms_user
+    <where>
+      <if test="userpassword != null and userpassword != ''">
+        and  userpassword =  #{userpassword}
+      </if>
+      <if test="id  > 0">
+        and id = #{id}
+      </if>
+    </where>
+  </select>
+  <!-- 修改密码-->
+  <update id="updatePassWord">
+    update smbms_user
+    <trim prefix="set" suffixOverrides="," suffix=" where id = #{id,jdbcType=BIGINT}  ">
+        <if test="userpassword != null and userpassword != ''">
+           userpassword = #{userpassword}
+        </if>
+    </trim>
+  </update>
+
+</mapper>

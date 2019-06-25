@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xinshi.smbms.mapper.ProviderMapper">
+  <resultMap id="BaseResultMap" type="com.xinshi.smbms.pojo.Provider">
+    <id column="id" property="id" />
+    <result column="procode" jdbcType="VARCHAR" property="procode" />
+    <result column="proname" jdbcType="VARCHAR" property="proname" />
+    <result column="proDesc" jdbcType="VARCHAR" property="prodesc" />
+    <result column="proContact" jdbcType="VARCHAR" property="procontact" />
+    <result column="proPhone" jdbcType="VARCHAR" property="prophone" />
+    <result column="proAddress" jdbcType="VARCHAR" property="proaddress" />
+    <result column="proFax" jdbcType="VARCHAR" property="profax" />
+    <result column="createdBy" jdbcType="BIGINT" property="createdby" />
+    <result column="creationDate" jdbcType="TIMESTAMP" property="creationdate" />
+    <result column="modifyDate" jdbcType="TIMESTAMP" property="modifydate" />
+    <result column="modifyBy" jdbcType="BIGINT" property="modifyby" />
+    <collection property="billList" ofType="com.xinshi.smbms.pojo.Bill">
+      <result property="id" column="id"></result>
+      <result property="productName" column="productName"></result>
+    </collection>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    p.id, proCode, proname, proDesc, proContact, proPhone, proAddress, proFax, p.createdBy, p.creationDate, p.modifyDate, p.modifyBy,
+     b.*,b.productName
+  </sql>
+
+  <!-- 查询所有的供应商  -->
+  <select id="allProvider" resultMap="BaseResultMap">
+    select  * from smbms_provider  GROUP BY proname
+  </select>
+    <!-- 查询单个供应商信息-->
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select *  from smbms_provider
+    <where>
+      <if test=" id > 0 ">
+           and  id = #{id}
+      </if>
+    </where>
+  </select>
+
+  <sql id="pagePro">
+
+    <where>
+      <if test="provider != null and  provider.procode != null and provider.procode !=''">
+        and procode LIKE CONCAT('%',#{provider.procode},'%')
+      </if>
+
+      <if test="provider != null and  provider.proname!=null and provider.proname !=''">
+        and proname LIKE CONCAT('%',#{provider.proname},'%')
+      </if>
+    </where>
+  </sql>
+  <!--  根据条件按照模糊查询供应商编号和供应商名称  实现供应商分页  -->
+  <select id="findProByCodeAndProName" resultMap="BaseResultMap">
+    SELECT id, procode, proname, proDesc, proContact, proPhone, proAddress, proFax, createdBy, creationDate, modifyDate, modifyBy
+    FROM smbms_provider
+    <include refid="pagePro"/>
+    order  by creationDate desc
+    limit #{pageNo},#{pageSize}
+  </select>
+
+  <!-- 供应商 统计总行数-->
+  <select id="countRowProvider" resultType="_int">
+    select  count(1) from smbms_provider
+    <include refid="pagePro"/>
+  </select>
+
+  <delete id="deleteByPrimaryKey">
+    delete from smbms_provider
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <!-- 增加供应商  -->
+  <insert id="insertSelectiveProvider" parameterType="com.xinshi.smbms.pojo.Provider">
+    insert into smbms_provider
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+
+      <if test="procode != null">
+        procode,
+      </if>
+      <if test="proname != null">
+        proname,
+      </if>
+      <if test="prodesc != null">
+        proDesc,
+      </if>
+      <if test="procontact != null">
+        proContact,
+      </if>
+      <if test="prophone != null">
+        proPhone,
+      </if>
+      <if test="proaddress != null">
+        proAddress,
+      </if>
+      <if test="profax != null">
+        proFax,
+      </if>
+      <if test="createdby != null">
+        createdBy,
+      </if>
+      <if test="creationdate != null">
+        creationDate,
+      </if>
+      <if test="modifydate != null">
+        modifyDate,
+      </if>
+      <if test="modifyby != null">
+        modifyBy,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="procode != null">
+        #{procode,jdbcType=VARCHAR},
+      </if>
+      <if test="proname != null">
+        #{proname,jdbcType=VARCHAR},
+      </if>
+      <if test="prodesc != null">
+        #{prodesc,jdbcType=VARCHAR},
+      </if>
+      <if test="procontact != null">
+        #{procontact,jdbcType=VARCHAR},
+      </if>
+      <if test="prophone != null">
+        #{prophone,jdbcType=VARCHAR},
+      </if>
+      <if test="proaddress != null">
+        #{proaddress,jdbcType=VARCHAR},
+      </if>
+      <if test="profax != null">
+        #{profax,jdbcType=VARCHAR},
+      </if>
+      <if test="createdby != null">
+        #{createdby,jdbcType=BIGINT},
+      </if>
+      <if test="creationdate != null">
+        #{creationdate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifydate != null">
+        #{modifydate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyby != null">
+        #{modifyby,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+  <!--  修改供应商的信息  -->
+  <update id="updateByPrimaryKeySelective" parameterType="com.xinshi.smbms.pojo.Provider">
+    update smbms_provider
+    <trim prefix="set" suffixOverrides="," suffix="where id=#{id}">
+      <if test="procode != null">
+        procode = #{procode,jdbcType=VARCHAR},
+      </if>
+      <if test="proname != null">
+        proname = #{proname,jdbcType=VARCHAR},
+      </if>
+      <if test="prodesc != null">
+        proDesc = #{prodesc,jdbcType=VARCHAR},
+      </if>
+      <if test="procontact != null">
+        proContact = #{procontact,jdbcType=VARCHAR},
+      </if>
+      <if test="prophone != null">
+        proPhone = #{prophone,jdbcType=VARCHAR},
+      </if>
+      <if test="proaddress != null">
+        proAddress = #{proaddress,jdbcType=VARCHAR},
+      </if>
+      <if test="profax != null">
+        proFax = #{profax,jdbcType=VARCHAR},
+      </if>
+      <if test="creationdate != null">
+        creationDate = #{creationdate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifydate != null">
+        modifyDate = #{modifydate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyby != null">
+        modifyBy = #{modifyby,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </update>
+</mapper>

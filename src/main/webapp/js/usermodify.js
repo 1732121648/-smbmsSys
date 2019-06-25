@@ -34,11 +34,14 @@ $(function(){
 					//alert(data[i].roleName);
 					if(rid != null && rid != undefined && data[i].id == rid ){
 						options += "<option selected=\"selected\" value=\""+data[i].id+"\" >"+data[i].roleName+"</option>";
+						console.log(data[i].id+'  data[i].id')
+						console.log(data[i].roleName+'  data[i].roleName')
 					}else{
 						options += "<option value=\""+data[i].id+"\" >"+data[i].roleName+"</option>";
 					}
 				}
 				userRole.html(options);
+				console.log(userRole.html())
 			}
 		},
 		error:function(data){//当访问时候，404，500 等非200的错误状态码
